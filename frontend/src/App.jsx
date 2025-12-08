@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import "./App.css";
 import { loginUser, logout } from "./store/userSlice";
@@ -6,12 +6,24 @@ import { backendAPI } from "./utils/backendAPI";
 import { useAuth0 } from "@auth0/auth0-react";
 
 function App() {
-  const { user, loginWithRedirect, isAuthenticated, logout } = useAuth0();
+  const {
+    user,
+    loginWithRedirect,
+    isAuthenticated,
+    isLoading,
+    getAccessTokenSilently,
+    logout,
+  } = useAuth0();
 
+  const [currentUserEmail, setCurrentUserEmail] = useState("");
+  const [currentUserPicture, setCurrentUserPicture] = useState("");
   useEffect(() => {
     if (user) {
       handleLogin();
+      return;
     }
+    setCurrentUserEmail(localStorage.getItem("userEmail") || "");
+    setCurrentUserPicture(localStorage.getItem("userPicture") || "");
   }, [user]);
 
   async function handleLogin() {
@@ -30,6 +42,10 @@ function App() {
         return;
       }
       console.log("User logged in successfully");
+      localStorage.setItem("userEmail", user.email);
+      localStorage.setItem("userPicture", user.picture);
+      setCurrentUserEmail(user.email);
+      setCurrentUserPicture(user.picture);
     } catch (error) {
       console.log("Error: ", error);
     }
@@ -50,6 +66,8 @@ function App() {
         return;
       }
       console.log("User logged out successfully");
+      localStorage.setItem("userEmail", "");
+      localStorage.setItem("userPicture", "");
     } catch (error) {
       console.log("Error: ", error);
     }
@@ -58,10 +76,10 @@ function App() {
 
   return (
     <>
-      {!user && <button onClick={loginWithRedirect}>login</button>}
-      {user && <h2>Hello! {user.email}</h2>}
-      {user && <button onClick={handleLogout}>Logout</button>}
-      {user && <img src={user.picture}></img>}
+      {!currentUserEmail && <button onClick={loginWithRedirect}>login</button>}
+      {currentUserEmail && <h2>Hello! {currentUserEmail}</h2>}
+      {currentUserEmail && <button onClick={handleLogout}>Logout</button>}
+      {currentUserEmail && <img src={currentUserPicture}></img>}
     </>
   );
 }
